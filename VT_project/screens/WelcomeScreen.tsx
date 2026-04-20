@@ -1,15 +1,27 @@
+import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
-import { router } from 'expo-router';
 
-export default function WelcomeScreen() {
+// Dodajemy interfejs dla propsów (TypeScript)
+interface WelcomeScreenProps {
+  onStart?: () => void;
+}
+
+export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🌍 VibeTrip</Text>
       <Text style={styles.title}>Generator losowych podróży</Text>
       <Text style={styles.subtitle}>Odkrywaj miejsca według swojego vibe</Text>
 
-      <Pressable style={styles.button} onPress={() => router.push('/login')}>
-        <Text style={styles.buttonText}>Start</Text>
+      {/* Jeśli onStart jest przekazany (ekran startowy), używamy go. 
+          Jeśli nie (ekran po zalogowaniu), przycisk może robić co innego. */}
+      <Pressable 
+        style={styles.button} 
+        onPress={onStart ? onStart : () => console.log("Jesteś już wewnątrz aplikacji!")}
+      >
+        <Text style={styles.buttonText}>
+          {onStart ? "Start" : "Szukaj Vibe'u"}
+        </Text>
       </Pressable>
     </View>
   );

@@ -1,7 +1,30 @@
-import { StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, View, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { supabase } from '../src/lib/supabase'; // Upewnij się, że ścieżka jest poprawna
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      Alert.alert('Błąd logowania', error.message);
+    } else {
+      // Jeśli logowanie się uda, sesja w index.tsx się zmieni
+      // i router sam powinien Cię przerzucić (lub zrób to ręcznie):
+      router.replace('/dashboard');
+    }
+    setLoading(false);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🌍 VibeTrip</Text>
@@ -11,6 +34,8 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -18,14 +43,21 @@ export default function LoginScreen() {
       <TextInput
         style={styles.input}
         placeholder="Hasło"
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
       />
 
-      <Pressable
-        style={styles.button}
-        onPress={() => router.replace('/dashboard')}
-        >
-        <Text style={styles.buttonText}>Zaloguj się</Text>
+      <Pressable 
+        style={[styles.button, loading && { opacity: 0.7 }]} 
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Zaloguj się</Text>
+        )}
       </Pressable>
 
       <Pressable onPress={() => router.push('/register')}>

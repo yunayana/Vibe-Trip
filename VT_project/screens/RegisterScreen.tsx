@@ -1,7 +1,35 @@
-import { StyleSheet, Text, TextInput, View, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, View, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import { supabase } from '../src/lib/supabase'; // Upewnij się, że ścieżka jest poprawna
 
 export default function RegisterScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert('Błąd', 'Hasła nie są identyczne');
+      return;
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      Alert.alert('Błąd rejestracji', error.message);
+    } else {
+      Alert.alert('Sukces!', 'Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto.');
+      router.replace('/login');
+    }
+    setLoading(false);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>🌍 VibeTrip</Text>
@@ -13,6 +41,8 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
@@ -20,17 +50,29 @@ export default function RegisterScreen() {
       <TextInput
         style={styles.input}
         placeholder="Hasło"
+        value={password}
+        onChangeText={setPassword}
         secureTextEntry
       />
 
       <TextInput
         style={styles.input}
         placeholder="Powtórz hasło"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
         secureTextEntry
       />
 
-      <Pressable style={styles.button}>
-        <Text style={styles.buttonText}>Zarejestruj się</Text>
+      <Pressable 
+        style={[styles.button, loading && { opacity: 0.7 }]} 
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Zarejestruj się</Text>
+        )}
       </Pressable>
 
       <Pressable onPress={() => router.push('/login')}>

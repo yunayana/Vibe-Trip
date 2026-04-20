@@ -23,7 +23,7 @@ export default function LoginScreen() {
 
       <Pressable
         style={styles.button}
-        onPress={() => router.replace('/dashboard')}
+        onPress={() => router.replace('/main/dashboard')}
         >
         <Text style={styles.buttonText}>Zaloguj się</Text>
       </Pressable>

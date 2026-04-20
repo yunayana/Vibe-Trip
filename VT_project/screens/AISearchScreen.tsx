@@ -35,7 +35,7 @@ export default function AISearchScreen() {
 
       <Pressable
         style={styles.searchButton}
-        onPress={() => router.push('/results')}
+        onPress={() => router.push('/main/results')}
       >
         <Text style={styles.searchButtonText}>🔎 Szukaj miejsca</Text>
       </Pressable>

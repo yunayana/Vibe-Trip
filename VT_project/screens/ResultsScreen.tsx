@@ -27,7 +27,7 @@ export default function ResultsScreen() {
 
       <Pressable
         style={styles.primaryButton}
-        onPress={() => router.push('/place_details')}
+        onPress={() => router.push('/main/place_details')}
       >
         <Text style={styles.primaryText}>Zobacz szczegóły i mapę</Text>
       </Pressable>

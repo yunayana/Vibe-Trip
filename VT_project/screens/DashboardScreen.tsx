@@ -3,62 +3,66 @@ import { router } from 'expo-router';
 
 export default function DashboardScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>🌍 VibeTrip</Text>
-      <Text style={styles.title}>Wybierz swój vibe</Text>
-      <Text style={styles.subtitle}>
-        Wylosujemy miejsce w Europie dopasowane do Twojego nastroju
-      </Text>
+    <View style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.logo}>🌍 VibeTrip</Text>
+        <Text style={styles.title}>Wybierz swój vibe</Text>
+        <Text style={styles.subtitle}>
+          Wylosujemy miejsce w Europie dopasowane do Twojego nastroju
+        </Text>
 
-      <View style={styles.vibesRow}>
-        <Pressable style={[styles.vibeChip, styles.vibeChill]}>
-          <Text style={styles.vibeText}>🌴 Chill</Text>
+        <View style={styles.vibesRow}>
+          <Pressable style={[styles.vibeChip, styles.vibeChill]}>
+            <Text style={styles.vibeText}>🌴 Chill</Text>
+          </Pressable>
+          <Pressable style={[styles.vibeChip, styles.vibeParty]}>
+            <Text style={styles.vibeText}>🎉 Party</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.vibesRow}>
+          <Pressable style={[styles.vibeChip, styles.vibeNature]}>
+            <Text style={styles.vibeText}>🌲 Nature</Text>
+          </Pressable>
+          <Pressable style={[styles.vibeChip, styles.vibeCity]}>
+            <Text style={styles.vibeText}>🏙️ City</Text>
+          </Pressable>
+        </View>
+
+        <Pressable style={styles.vibeChipWide}>
+          <Text style={styles.vibeText}>🧭 Mystery</Text>
         </Pressable>
-        <Pressable style={[styles.vibeChip, styles.vibeParty]}>
-          <Text style={styles.vibeText}>🎉 Party</Text>
+
+        <Pressable
+          style={styles.generateButton}
+          onPress={() => router.push('/main/results')}
+        >
+          <Text style={styles.generateText}>🎲 Wylosuj miejsce</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => router.push('/main/saved-places')}
+        >
+          <Text style={styles.secondaryButtonText}>❤️ Zapisane miejsca</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => router.push('/main/profile')}
+        >
+          <Text style={styles.secondaryButtonText}>👤 Profil</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.secondaryButton}
+          onPress={() => router.push('/main/ai-search')}
+        >
+          <Text style={styles.secondaryButtonText}>🤖 AI Search</Text>
         </Pressable>
       </View>
 
-      <View style={styles.vibesRow}>
-        <Pressable style={[styles.vibeChip, styles.vibeNature]}>
-          <Text style={styles.vibeText}>🌲 Nature</Text>
-        </Pressable>
-        <Pressable style={[styles.vibeChip, styles.vibeCity]}>
-          <Text style={styles.vibeText}>🏙️ City</Text>
-        </Pressable>
-      </View>
-
-      <Pressable style={styles.vibeChipWide}>
-        <Text style={styles.vibeText}>🧭 Mystery</Text>
-      </Pressable>
-
-      <Pressable
-        style={styles.generateButton}
-        onPress={() => router.push('/results')}
-        >
-        <Text style={styles.generateText}>🎲 Wylosuj miejsce</Text>
-        </Pressable>
-
-        <Pressable
-        style={styles.secondaryButton}
-        onPress={() => router.push('/saved-places')}
-        >
-        <Text style={styles.secondaryButtonText}>❤️ Zapisane miejsca</Text>
-        </Pressable>
-
-        <Pressable
-        style={styles.secondaryButton}
-        onPress={() => router.push('/profile')}
-        >
-        <Text style={styles.secondaryButtonText}>👤 Profil</Text>
-        </Pressable>
-
-        <Pressable
-        style={styles.secondaryButton}
-        onPress={() => router.push('/ai-search')}
-        >
-        <Text style={styles.secondaryButtonText}>🤖 AI Search</Text>
-        </Pressable>
+     
     </View>
   );
 }
@@ -69,6 +73,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FA',
     paddingHorizontal: 24,
     paddingTop: 64,
+    paddingBottom: 96,
   },
   logo: {
     fontSize: 24,
@@ -137,17 +142,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   secondaryButton: {
-  backgroundColor: '#FFFFFF',
-  paddingVertical: 14,
-  borderRadius: 16,
-  alignItems: 'center',
-  marginTop: 12,
-  borderWidth: 1,
-  borderColor: '#D9E0E6',
-},
-secondaryButtonText: {
-  color: '#1E2A38',
-  fontSize: 15,
-  fontWeight: '600',
-},
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#D9E0E6',
+  },
+  secondaryButtonText: {
+    color: '#1E2A38',
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });

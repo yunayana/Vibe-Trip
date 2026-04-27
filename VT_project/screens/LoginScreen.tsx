@@ -20,7 +20,7 @@ export default function LoginScreen() {
     } else {
       // Jeśli logowanie się uda, sesja w index.tsx się zmieni
       // i router sam powinien Cię przerzucić (lub zrób to ręcznie):
-      router.replace('/dashboard');
+      router.replace('/main/dashboard');
     }
     setLoading(false);
   };
@@ -48,7 +48,6 @@ export default function LoginScreen() {
         secureTextEntry
       />
 
-<<<<<<< HEAD
       <Pressable 
         style={[styles.button, loading && { opacity: 0.7 }]} 
         onPress={handleLogin}
@@ -59,13 +58,6 @@ export default function LoginScreen() {
         ) : (
           <Text style={styles.buttonText}>Zaloguj się</Text>
         )}
-=======
-      <Pressable
-        style={styles.button}
-        onPress={() => router.replace('/main/dashboard')}
-        >
-        <Text style={styles.buttonText}>Zaloguj się</Text>
->>>>>>> 94127b2a31f4f3d866bca6f7268374b1fc7e87d3
       </Pressable>
 
       <Pressable onPress={() => router.push('/register')}>

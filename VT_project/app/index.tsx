@@ -5,20 +5,21 @@ import { supabase } from "../src/lib/supabase";
 // Ekrany
 import WelcomeScreen from "../screens/WelcomeScreen";
 import LoginScreen from "../screens/LoginScreen";
+import AISearchScreen from "../screens/AISearchScreen"; // Importujemy nową wyszukiwarkę
 
 export default function Index() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isStarted, setIsStarted] = useState(false); // Nowy stan kontrolujący start
+  const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
-    // 1. Sprawdź sesję przy starcie
+    // 1. Sprawdź sesję przy starcie aplikacji
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // 2. Nasłuchuj zmian sesji
+    // 2. Nasłuchuj zmian stanu autoryzacji (login/logout)
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -28,6 +29,7 @@ export default function Index() {
     };
   }, []);
 
+  // Widok ładowania (np. podczas sprawdzania tokena w pamięci urządzenia)
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -36,17 +38,22 @@ export default function Index() {
     );
   }
 
-  // LOGIKA WYŚWIETLANIA:
-  
-  // 1. Jeśli użytkownik jeszcze nie kliknął "Start", pokazujemy ekran powitalny
+  // --- LOGIKA WYŚWIETLANIA (FLOW UŻYTKOWNIKA) ---
+
+  // KROK 1: Jeśli użytkownik widzi aplikację pierwszy raz (nie kliknął jeszcze "Start")
+  // Pokazujemy ekran powitalny (niezależnie od sesji)
   if (!isStarted) {
     return <WelcomeScreen onStart={() => setIsStarted(true)} />;
   }
 
-  // 2. Po kliknięciu "Start": 
-  // Jeśli jest zalogowany -> idzie do właściwej apki (tu WelcomeScreen pełni rolę Dashboardu na razie)
-  // Jeśli nie jest zalogowany -> idzie do logowania
-  return session ? <WelcomeScreen /> : <LoginScreen />;
+  // KROK 2: Jeśli użytkownik kliknął "Start", ale NIE JEST zalogowany
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  // KROK 3: Jeśli użytkownik kliknął "Start" i JEST zalogowany
+  // Kierujemy go prosto do modułu AI Search
+  return <AISearchScreen />;
 }
 
 const styles = StyleSheet.create({

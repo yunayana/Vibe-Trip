@@ -1,24 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { router } from "expo-router";
 import { supabase } from "../src/lib/supabase";
-
-// Ekrany
 import WelcomeScreen from "../screens/WelcomeScreen";
-import LoginScreen from "../screens/LoginScreen";
 
 export default function Index() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isStarted, setIsStarted] = useState(false); // Nowy stan kontrolujący start
+  const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
-    // 1. Sprawdź sesję przy starcie
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // 2. Nasłuchuj zmian sesji
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -28,6 +24,16 @@ export default function Index() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!loading && isStarted) {
+      if (session) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/login");
+      }
+    }
+  }, [loading, isStarted, session]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -36,17 +42,7 @@ export default function Index() {
     );
   }
 
-  // LOGIKA WYŚWIETLANIA:
-  
-  // 1. Jeśli użytkownik jeszcze nie kliknął "Start", pokazujemy ekran powitalny
-  if (!isStarted) {
-    return <WelcomeScreen onStart={() => setIsStarted(true)} />;
-  }
-
-  // 2. Po kliknięciu "Start": 
-  // Jeśli jest zalogowany -> idzie do właściwej apki (tu WelcomeScreen pełni rolę Dashboardu na razie)
-  // Jeśli nie jest zalogowany -> idzie do logowania
-  return session ? <WelcomeScreen /> : <LoginScreen />;
+  return <WelcomeScreen onStart={() => setIsStarted(true)} />;
 }
 
 const styles = StyleSheet.create({

@@ -1,27 +1,19 @@
 import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 
-// Dodajemy interfejs dla propsów (TypeScript)
 interface WelcomeScreenProps {
-  onStart?: () => void;
+  onStart: () => void;
 }
 
 export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>🌍 VibeTrip</Text>
+      <Text style={styles.logo}>VibeTrip</Text>
       <Text style={styles.title}>Generator losowych podróży</Text>
       <Text style={styles.subtitle}>Odkrywaj miejsca według swojego vibe</Text>
 
-      {/* Jeśli onStart jest przekazany (ekran startowy), używamy go. 
-          Jeśli nie (ekran po zalogowaniu), przycisk może robić co innego. */}
-      <Pressable 
-        style={styles.button} 
-        onPress={onStart ? onStart : () => console.log("Jesteś już wewnątrz aplikacji!")}
-      >
-        <Text style={styles.buttonText}>
-          {onStart ? "Start" : "Szukaj Vibe'u"}
-        </Text>
+      <Pressable style={styles.button} onPress={onStart}>
+        <Text style={styles.buttonText}>Start</Text>
       </Pressable>
     </View>
   );

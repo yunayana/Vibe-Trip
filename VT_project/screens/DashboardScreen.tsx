@@ -1,7 +1,19 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useVibeStore } from '../store/vibeStore';
 
 export default function DashboardScreen() {
+  const { selectedVibe, setSelectedVibe } = useVibeStore();
+
+  const handleGenerate = () => {
+    if (!selectedVibe) {
+      Alert.alert('Wybierz vibe', 'Najpierw wybierz klimat podróży.');
+      return;
+    }
+
+    router.push('/results');
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.container}>
@@ -12,57 +24,92 @@ export default function DashboardScreen() {
         </Text>
 
         <View style={styles.vibesRow}>
-          <Pressable style={[styles.vibeChip, styles.vibeChill]}>
+          <Pressable
+            style={[
+              styles.vibeChip,
+              styles.vibeChill,
+              selectedVibe === 'chill' && styles.activeVibe,
+            ]}
+            onPress={() => setSelectedVibe('chill')}
+          >
             <Text style={styles.vibeText}>🌴 Chill</Text>
           </Pressable>
-          <Pressable style={[styles.vibeChip, styles.vibeParty]}>
+
+          <Pressable
+            style={[
+              styles.vibeChip,
+              styles.vibeParty,
+              selectedVibe === 'party' && styles.activeVibe,
+            ]}
+            onPress={() => setSelectedVibe('party')}
+          >
             <Text style={styles.vibeText}>🎉 Party</Text>
           </Pressable>
         </View>
 
         <View style={styles.vibesRow}>
-          <Pressable style={[styles.vibeChip, styles.vibeNature]}>
+          <Pressable
+            style={[
+              styles.vibeChip,
+              styles.vibeNature,
+              selectedVibe === 'nature' && styles.activeVibe,
+            ]}
+            onPress={() => setSelectedVibe('nature')}
+          >
             <Text style={styles.vibeText}>🌲 Nature</Text>
           </Pressable>
-          <Pressable style={[styles.vibeChip, styles.vibeCity]}>
+
+          <Pressable
+            style={[
+              styles.vibeChip,
+              styles.vibeCity,
+              selectedVibe === 'city' && styles.activeVibe,
+            ]}
+            onPress={() => setSelectedVibe('city')}
+          >
             <Text style={styles.vibeText}>🏙️ City</Text>
           </Pressable>
         </View>
 
-        <Pressable style={styles.vibeChipWide}>
+        <Pressable
+          style={[
+            styles.vibeChipWide,
+            selectedVibe === 'mystery' && styles.activeVibe,
+          ]}
+          onPress={() => setSelectedVibe('mystery')}
+        >
           <Text style={styles.vibeText}>🧭 Mystery</Text>
         </Pressable>
 
-        <Pressable
-          style={styles.generateButton}
-          onPress={() => router.push('/main/results')}
-        >
+        <Pressable style={styles.generateButton} onPress={handleGenerate}>
           <Text style={styles.generateText}>🎲 Wylosuj miejsce</Text>
         </Pressable>
 
         <Pressable
           style={styles.secondaryButton}
-          onPress={() => router.push('/main/saved-places')}
+          onPress={() => router.push('/saved-places')}
         >
           <Text style={styles.secondaryButtonText}>❤️ Zapisane miejsca</Text>
         </Pressable>
 
         <Pressable
           style={styles.secondaryButton}
-          onPress={() => router.push('/main/profile')}
+          onPress={() => router.push('/profile')}
         >
           <Text style={styles.secondaryButtonText}>👤 Profil</Text>
         </Pressable>
 
         <Pressable
           style={styles.secondaryButton}
-          onPress={() => router.push('/main/ai-search')}
+          onPress={() => router.push('/ai-search')}
         >
           <Text style={styles.secondaryButtonText}>🤖 AI Search</Text>
         </Pressable>
-      </View>
 
-     
+        <Text style={styles.selectedInfo}>
+          Wybrany vibe: {selectedVibe ? selectedVibe : 'brak'}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -125,6 +172,10 @@ const styles = StyleSheet.create({
   vibeCity: {
     backgroundColor: '#E3E7FF',
   },
+  activeVibe: {
+    borderWidth: 2,
+    borderColor: '#1E2A38',
+  },
   vibeText: {
     fontSize: 16,
     fontWeight: '600',
@@ -154,5 +205,11 @@ const styles = StyleSheet.create({
     color: '#1E2A38',
     fontSize: 15,
     fontWeight: '600',
+  },
+  selectedInfo: {
+    marginTop: 18,
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#5B6470',
   },
 });

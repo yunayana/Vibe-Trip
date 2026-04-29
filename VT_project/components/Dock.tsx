@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { router, usePathname } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type DockItem = {
   label: string;
@@ -17,14 +17,15 @@ export default function Dock({ items }: Props) {
   return (
     <View style={styles.container}>
       {items.map((item) => {
-        const isActive = pathname === item.href;
+        // Check if current path matches (handle both absolute and relative paths)
+        const isActive = pathname.includes(item.href);
 
         return (
           <Pressable
             key={item.href}
             style={[styles.item, isActive && styles.itemActive]}
             onPress={() => {
-              if (!isActive) router.replace(item.href as any);
+              if (!isActive) router.push(`/(main)/${item.href}` as any);
             }}
           >
             <Text style={[styles.icon, isActive && styles.iconActive]}>

@@ -10,7 +10,7 @@ import {
   Text,
   View
 } from 'react-native';
-import { supabase } from '../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase';
 
 export default function ResultScreen() {
   const router = useRouter();

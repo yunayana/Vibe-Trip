@@ -8,10 +8,10 @@ export default function MainLayout() {
       <Stack screenOptions={{ headerShown: false }} />
       <Dock
         items={[
-          { label: "Home", icon: "🏠", href: "/dashboard" },
-          { label: "AI", icon: "🤖", href: "/ai-search" },
-          { label: "Saved", icon: "❤️", href: "/saved-places" },
-          { label: "Profile", icon: "👤", href: "/profile" },
+          { label: "Home", icon: "🏠", href: "dashboard" },
+          { label: "AI", icon: "🤖", href: "ai-search" },
+          { label: "Saved", icon: "❤️", href: "saved-places" },
+          { label: "Profile", icon: "👤", href: "profile" },
         ]}
       />
     </View>

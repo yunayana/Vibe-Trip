@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../src/lib/supabase'; // Upewnij się, że ścieżka jest poprawna
 
 export default function LoginScreen() {
@@ -20,7 +20,7 @@ export default function LoginScreen() {
     } else {
       // Jeśli logowanie się uda, sesja w index.tsx się zmieni
       // i router sam powinien Cię przerzucić (lub zrób to ręcznie):
-      router.replace('/main/dashboard');
+      router.replace('/(main)/dashboard');
     }
     setLoading(false);
   };

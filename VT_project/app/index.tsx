@@ -1,13 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { supabase } from "../src/lib/supabase";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import WelcomeScreen from "../screens/WelcomeScreen";
-<<<<<<< HEAD
-import LoginScreen from "../screens/LoginScreen";
-import AISearchScreen from "../screens/AISearchScreen"; // Importujemy nową wyszukiwarkę
-=======
->>>>>>> main
+import { supabase } from "../src/lib/supabase";
 
 export default function Index() {
   const [session, setSession] = useState<any>(null);
@@ -15,19 +10,12 @@ export default function Index() {
   const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
-<<<<<<< HEAD
-    // 1. Sprawdź sesję przy starcie aplikacji
-=======
->>>>>>> main
+    // Sprawdzamy, czy użytkownik jest już zalogowany
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-<<<<<<< HEAD
-    // 2. Nasłuchuj zmian stanu autoryzacji (login/logout)
-=======
->>>>>>> main
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -37,20 +25,18 @@ export default function Index() {
     };
   }, []);
 
-<<<<<<< HEAD
-  // Widok ładowania (np. podczas sprawdzania tokena w pamięci urządzenia)
-=======
-  useEffect(() => {
-    if (!loading && isStarted) {
-      if (session) {
-        router.replace("/dashboard");
-      } else {
-        router.replace("/login");
-      }
+  // Funkcja odpalana po kliknięciu przycisku na WelcomeScreen
+  const handleStart = () => {
+    setIsStarted(true);
+    if (session) {
+      // Jeśli mamy sesję, idziemy do dashboarda
+      router.replace("/(main)/dashboard");
+    } else {
+      // Jeśli NIE mamy sesji, idziemy do logowania
+      router.replace("/login");
     }
-  }, [loading, isStarted, session]);
+  };
 
->>>>>>> main
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -59,26 +45,8 @@ export default function Index() {
     );
   }
 
-<<<<<<< HEAD
-  // --- LOGIKA WYŚWIETLANIA (FLOW UŻYTKOWNIKA) ---
-
-  // KROK 1: Jeśli użytkownik widzi aplikację pierwszy raz (nie kliknął jeszcze "Start")
-  // Pokazujemy ekran powitalny (niezależnie od sesji)
-  if (!isStarted) {
-    return <WelcomeScreen onStart={() => setIsStarted(true)} />;
-  }
-
-  // KROK 2: Jeśli użytkownik kliknął "Start", ale NIE JEST zalogowany
-  if (!session) {
-    return <LoginScreen />;
-  }
-
-  // KROK 3: Jeśli użytkownik kliknął "Start" i JEST zalogowany
-  // Kierujemy go prosto do modułu AI Search
-  return <AISearchScreen />;
-=======
-  return <WelcomeScreen onStart={() => setIsStarted(true)} />;
->>>>>>> main
+  // Ziemia 🌍 czeka na kliknięcie
+  return <WelcomeScreen onStart={handleStart} />;
 }
 
 const styles = StyleSheet.create({

@@ -1,158 +1,66 @@
-import { StyleSheet, Text, View, Pressable } from 'react-native';
-import { router } from 'expo-router';
-import { useVibeStore } from '../store/vibeStore';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function PlaceDetailsScreen() {
-  const { selectedVibe } = useVibeStore();
+  const router = useRouter();
+  const params = useLocalSearchParams();
 
-  const detailsByVibe = {
-    chill: {
-      placeName: 'Santorini, Grecja',
-      vibe: '🌴 Chill vibe',
-      description:
-        'Santorini to wyspa idealna na spokojny wypoczynek z widokiem na morze i zachody słońca.',
-      reason:
-        'Kawiarnie z widokiem na klify, baseny infinity i spokojny rytm życia sprawiają, że to świetne miejsce na totalny chill.',
-    },
-    party: {
-      placeName: 'Barcelona, Hiszpania',
-      vibe: '🎉 Party vibe',
-      description:
-        'Barcelona łączy plaże, unikalną architekturę Gaudiego i bogate życie nocne. Idealna na city break w imprezowym klimacie.',
-      reason:
-        'Kluby przy plaży, bary w dzielnicy Barceloneta i liczne festiwale sprawiają, że to świetny kierunek dla osób szukających energii i zabawy.',
-    },
-    nature: {
-      placeName: 'Zakopane, Polska',
-      vibe: '🌲 Nature vibe',
-      description:
-        'Zakopane to stolica polskich Tatr z górskimi szlakami i bliskością dzikiej natury.',
-      reason:
-        'Szlaki w Tatrach, doliny, hale i widok na góry sprawiają, że to idealne miejsce dla miłośników natury i trekkingu.',
-    },
-    city: {
-      placeName: 'Amsterdam, Holandia',
-      vibe: '🏙️ City vibe',
-      description:
-        'Amsterdam to miasto kanałów, rowerów i muzeów, idealne na intensywny city break.',
-      reason:
-        'Klimatyczne uliczki, kawiarnie, kultura i nocne życie sprawiają, że to świetny wybór dla osób lubiących energię miasta.',
-    },
-    mystery: {
-      placeName: 'Sintra, Portugalia',
-      vibe: '🧭 Mystery vibe',
-      description:
-        'Sintra to baśniowe miasteczko z zamkami, mgłą na wzgórzach i tajemniczym klimatem.',
-      reason:
-        'Kolorowe pałace, ukryte ogrody i mglista atmosfera tworzą wrażenie miejsca z innego świata – idealne dla mystery vibe.',
-    },
-  };
-
-  const fallbackDetails = {
-    placeName: 'Brak wybranego miejsca',
-    vibe: 'Brak vibe',
-    description:
-      'Najpierw wybierz vibe i miejsce, a potem wróć do szczegółów. Wtedy pokażemy dokładniejszy opis.',
-    reason:
-      'Aby zobaczyć dopasowane szczegóły miejsca, wróć do ekranu głównego i wybierz klimat podróży.',
-  };
-
-  const details =
-    selectedVibe && detailsByVibe[selectedVibe]
-      ? detailsByVibe[selectedVibe]
-      : fallbackDetails;
+  // Pobieramy dane przesłane z poprzedniego ekranu
+  const { name, address, vibe } = params;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.placeName}>{details.placeName}</Text>
-      <Text style={styles.vibe}>{details.vibe}</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>← Wróć do listy</Text>
+        </Pressable>
 
-      <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapText}>[Tu będzie mapa 🌍]</Text>
-      </View>
+        <Text style={styles.label}>Szczegóły miejsca</Text>
+        <Text style={styles.placeName}>{name || "Nieznane miejsce"}</Text>
 
-      <Text style={styles.sectionTitle}>Opis miejsca</Text>
-      <Text style={styles.text}>{details.description}</Text>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Lokalizacja</Text>
+          <Text style={styles.text}>📍 {address || "Brak dokładnego adresu"}</Text>
 
-      <Text style={styles.sectionTitle}>Dlaczego pasuje do vibe?</Text>
-      <Text style={styles.text}>{details.reason}</Text>
+          <View style={styles.separator} />
 
-      <Pressable style={styles.primaryButton}>
-        <Text style={styles.primaryText}>❤️ Dodaj do ulubionych</Text>
-      </Pressable>
+          <Text style={styles.sectionTitle}>Twój wybrany Vibe</Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}># {vibe || "brak"}</Text>
+          </View>
 
-      <Pressable
-        style={styles.secondaryButton}
-        onPress={() => router.back()}
-      >
-        <Text style={styles.secondaryText}>Wróć do wyników</Text>
-      </Pressable>
-    </View>
+          <View style={styles.separator} />
+
+          <Text style={styles.sectionTitle}>Dlaczego to miejsce?</Text>
+          <Text style={styles.text}>
+            To miejsce zostało dopasowane przez AI, ponieważ pasuje do klimatu "{vibe}" w tej lokalizacji.
+          </Text>
+        </View>
+
+        <Pressable 
+          style={styles.mapButton} 
+          onPress={() => alert('Tu w przyszłości dodasz mapę Google!')}
+        >
+          <Text style={styles.mapButtonText}>🗺️ Zobacz na mapie</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F7F8FA',
-    paddingHorizontal: 24,
-    paddingTop: 64,
-  },
-  placeName: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#1E2A38',
-  },
-  vibe: {
-    fontSize: 15,
-    color: '#5B6470',
-    marginBottom: 16,
-  },
-  mapPlaceholder: {
-    backgroundColor: '#DDE7F5',
-    borderRadius: 20,
-    height: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  mapText: {
-    color: '#1E2A38',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  text: {
-    fontSize: 14,
-    color: '#444A55',
-    marginBottom: 12,
-    lineHeight: 22,
-  },
-  primaryButton: {
-    backgroundColor: '#E84855',
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  primaryText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryText: {
-    color: '#2D6A8A',
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  container: { flex: 1, backgroundColor: '#F7F8FA' },
+  scrollContent: { padding: 24, paddingTop: 40 },
+  backButton: { marginBottom: 20 },
+  backText: { color: '#2D6A8A', fontWeight: 'bold', fontSize: 16 },
+  label: { fontSize: 14, color: '#64748B', marginBottom: 4, textTransform: 'uppercase' },
+  placeName: { fontSize: 28, fontWeight: '800', color: '#1E2A38', marginBottom: 24 },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: '#E2E8F0', elevation: 2 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1E2A38', marginBottom: 8 },
+  text: { fontSize: 15, color: '#475569', lineHeight: 22, marginBottom: 16 },
+  separator: { height: 1, backgroundColor: '#F1F5F9', marginVertical: 16 },
+  badge: { alignSelf: 'flex-start', backgroundColor: '#E0F2FE', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  badgeText: { color: '#0369A1', fontSize: 12, fontWeight: '800' },
+  mapButton: { backgroundColor: '#1E2A38', paddingVertical: 18, borderRadius: 16, alignItems: 'center', marginTop: 24 },
+  mapButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' }
 });

@@ -11,7 +11,7 @@ export default function DashboardScreen() {
       return;
     }
 
-    router.push('/results');
+    router.push('/result');
   };
 
   return (

@@ -352,14 +352,15 @@ export default function ProfileScreen() {
           )}
 
           <Pressable
-            style={[styles.logoutButton, loggingOut && styles.disabledButton]}
-            onPress={confirmLogout}
-            disabled={loggingOut}
-          >
-            <Text style={styles.logoutText}>
-              {loggingOut ? 'Wylogowywanie...' : 'Wyloguj się'}
-            </Text>
-          </Pressable>
+              style={[styles.logoutButton, loggingOut && styles.disabledButton]}
+              onPress={confirmLogout}
+              disabled={loggingOut}
+            >
+              <Text style={styles.logoutText}>
+                {loggingOut ? 'Wylogowywanie...' : 'Wyloguj się'}
+              </Text>
+            </Pressable>
+
         </View>
       </ScrollView>
     </LinearGradient>

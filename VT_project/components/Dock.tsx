@@ -1,83 +1,94 @@
-import { router, usePathname } from 'expo-router';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router, usePathname } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type DockItem = {
   label: string;
-  icon: string;      // na razie emoji
-  href: string;      // np. '/dashboard'
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon?: keyof typeof Ionicons.glyphMap;
+  href: string;
 };
 
-type Props = {
+type DockProps = {
   items: DockItem[];
 };
 
-export default function Dock({ items }: Props) {
+export default function Dock({ items }: DockProps) {
   const pathname = usePathname();
 
-  return (
-    <View style={styles.container}>
-      {items.map((item) => {
-        // Check if current path matches (handle both absolute and relative paths)
-        const isActive = pathname.includes(item.href);
+  const isActive = (href: string) => {
+    return pathname === `/(main)/${href}` || pathname.endsWith(`/${href}`);
+  };
 
-        return (
-          <Pressable
-            key={item.href}
-            style={[styles.item, isActive && styles.itemActive]}
-            onPress={() => {
-              if (!isActive) router.push(`/(main)/${item.href}` as any);
-            }}
-          >
-            <Text style={[styles.icon, isActive && styles.iconActive]}>
-              {item.icon}
-            </Text>
-            <Text style={[styles.label, isActive && styles.labelActive]}>
-              {item.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+  return (
+    <View style={styles.wrapper}>
+      <View style={styles.dock}>
+        {items.map((item) => {
+          const active = isActive(item.href);
+          const iconName = active ? item.activeIcon || item.icon : item.icon;
+
+          return (
+            <Pressable
+              key={item.href}
+              onPress={() => router.push(`/(main)/${item.href}` as any)}
+              style={[styles.item, active && styles.itemActive]}
+            >
+              <Ionicons
+                name={iconName}
+                size={20}
+                color={active ? '#F5F3EE' : '#8C8C92'}
+              />
+              <Text style={[styles.label, active && styles.labelActive]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     position: 'absolute',
-    bottom: 16,
     left: 16,
     right: 16,
+    bottom: 18,
+  },
+  dock: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#120F17',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(16,16,16,0.96)',
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#2A2A2A',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   item: {
     flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
+    minHeight: 54,
     borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    gap: 4,
   },
   itemActive: {
-    backgroundColor: '#1D1A25',
-  },
-  icon: {
-    fontSize: 20,
-    marginBottom: 2,
-  },
-  iconActive: {
-    transform: [{ scale: 1.1 }],
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#343434',
   },
   label: {
     fontSize: 11,
-    color: '#9BA0B0',
+    fontWeight: '700',
+    color: '#8C8C92',
+    letterSpacing: 0.2,
   },
   labelActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: '#F5F3EE',
   },
 });

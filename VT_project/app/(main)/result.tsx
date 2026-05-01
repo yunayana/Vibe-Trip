@@ -1,37 +1,43 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
-  View
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '../../src/lib/supabase';
 
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const mapRef = useRef<MapView>(null);
+  const listRef = useRef<FlatList>(null);
+
   const [places, setPlaces] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setIsLoading(true);
     setPlaces([]);
     setSavedIds(new Set());
+    setSelectedIndex(null);
 
     if (params.places) {
       try {
         const decoded = JSON.parse(params.places as string);
-        setPlaces(decoded);
-        console.log("✅ Wyświetlam miejsca dla:", params.location);
+        setPlaces(Array.isArray(decoded) ? decoded : []);
       } catch (e) {
-        console.error("❌ Błąd parsowania:", e);
+        console.error('❌ Błąd parsowania:', e);
       }
     }
 
@@ -40,155 +46,341 @@ export default function ResultScreen() {
 
   const handleSave = async (item: any, index: number) => {
     if (savedIds.has(index)) {
-      Alert.alert("Już zapisano", "To miejsce jest już w Twoich zapisanych.");
+      Alert.alert('Już zapisano', 'To miejsce jest już w Twoich zapisanych.');
       return;
     }
 
     setSavingIndex(index);
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
-        Alert.alert("Błąd", "Musisz być zalogowany, aby zapisywać miejsca.");
+        Alert.alert(
+          'Błąd',
+          'Musisz być zalogowany, aby zapisywać miejsca.'
+        );
         return;
       }
 
-      const { error } = await supabase
-        .from('place_recommendations')
-        .insert({
-          user_id: user.id,
-          name: item.name,
-          address: item.address || params.location,
-          latitude: item.lat ?? null,
-          longitude: item.lon ?? null,
-          place_id: `${item.lat}_${item.lon}`,  // unikalny klucz z koordynatów
-          vibe_match_score: 100,                 // domyślnie 100 bo user świadomie zapisał
-        });
+      const { error } = await supabase.from('place_recommendations').insert({
+        user_id: user.id,
+        name: item.name,
+        address: item.address || params.location,
+        latitude: item.lat ?? null,
+        longitude: item.lon ?? null,
+        place_id: `${item.lat}_${item.lon}`,
+        vibe_match_score: 100,
+      });
 
       if (error) throw error;
 
-      setSavedIds(prev => new Set(prev).add(index));
-      Alert.alert("✅ Zapisano!", `"${item.name}" dodano do zapisanych miejsc.`);
+      setSavedIds((prev) => new Set(prev).add(index));
+      Alert.alert('Zapisano!', `"${item.name}" dodano do zapisanych miejsc.`);
     } catch (e: any) {
-      console.error("Błąd zapisu:", e.message);
-      Alert.alert("Błąd", "Nie udało się zapisać miejsca. Spróbuj ponownie.");
+      console.error('Błąd zapisu:', e.message);
+      Alert.alert('Błąd', 'Nie udało się zapisać miejsca. Spróbuj ponownie.');
     } finally {
       setSavingIndex(null);
     }
   };
 
   const vibeEmoji: Record<string, string> = {
-    party: '🎉', relax: '☕', culture: '🏛️', nature: '🌲',
-    mysterious: '🧭', sunset: '🌅', sad: '🕯️', lonely: '📚',
+    party: '🎉',
+    relax: '🌿',
+    culture: '🏛️',
+    nature: '🌲',
+    mysterious: '🌙',
+    sunset: '🌅',
+    sad: '🌧️',
+    lonely: '🕯️',
   };
 
-  const vibe = params.vibe as string || 'vibe';
+  const vibe = (params.vibe as string) || 'vibe';
+
+  const mapPlaces = useMemo(() => {
+    return places.filter(
+      (item) =>
+        typeof item?.lat === 'number' &&
+        typeof item?.lon === 'number' &&
+        !Number.isNaN(item.lat) &&
+        !Number.isNaN(item.lon)
+    );
+  }, [places]);
+
+  const initialRegion = useMemo(() => {
+    if (mapPlaces.length > 0) {
+      return {
+        latitude: mapPlaces[0].lat,
+        longitude: mapPlaces[0].lon,
+        latitudeDelta: 0.12,
+        longitudeDelta: 0.12,
+      };
+    }
+
+    return {
+      latitude: 52.2297,
+      longitude: 21.0122,
+      latitudeDelta: 0.12,
+      longitudeDelta: 0.12,
+    };
+  }, [mapPlaces]);
+
+  const focusPlace = (item: any, index: number) => {
+    setSelectedIndex(index);
+
+    if (item?.lat && item?.lon) {
+      mapRef.current?.animateToRegion(
+        {
+          latitude: item.lat,
+          longitude: item.lon,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        },
+        350
+      );
+    }
+
+    listRef.current?.scrollToIndex({
+      index,
+      animated: true,
+      viewPosition: 0.5,
+    });
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backIcon}>← Wróć</Text>
-        </Pressable>
-        <View>
-          <Text style={styles.headerTitle}>
-            {vibeEmoji[vibe] || '📍'} {params.location || 'Twoje miejsca'}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {isLoading
-              ? "Ładowanie..."
-              : `${places.length} propozycji · vibe: ${vibe}`}
-          </Text>
-        </View>
-      </View>
+    <LinearGradient
+      colors={['#050505', '#090909', '#101114', '#161821']}
+      locations={[0, 0.35, 0.72, 1]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Pressable
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Text style={styles.backIcon}>← Wróć</Text>
+            </Pressable>
 
-      {isLoading ? (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#2D6A8A" />
-        </View>
-      ) : (
-        <FlatList
-          data={places}
-          keyExtractor={(_, index) => `place-${index}-${params.refreshKey}`}
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item, index }) => {
-            const isSaved = savedIds.has(index);
-            const isSaving = savingIndex === index;
+            <Text style={styles.headerTitle}>
+              {vibeEmoji[vibe] || '📍'} {params.location || 'Twoje miejsca'}
+            </Text>
 
-            return (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.placeName}>{item.name}</Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>
-                      {vibeEmoji[vibe]} {vibe}
+            <Text style={styles.headerSubtitle}>
+              {isLoading
+                ? 'Ładowanie...'
+                : `${places.length} propozycji · vibe: ${vibe}`}
+            </Text>
+          </View>
+
+          {isLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#F5F3EE" />
+            </View>
+          ) : (
+            <View style={styles.content}>
+              {mapPlaces.length > 0 && (
+                <View style={styles.mapWrapper}>
+                  <MapView
+                    ref={mapRef}
+                    style={styles.map}
+                    initialRegion={initialRegion}
+                  >
+                    {mapPlaces.map((item, index) => {
+                      const isSelected = selectedIndex === index;
+
+                      return (
+                        <Marker
+                          key={`marker-${index}`}
+                          coordinate={{
+                            latitude: item.lat,
+                            longitude: item.lon,
+                          }}
+                          title={item.name}
+                          description={
+                            item.address || String(params.location || '')
+                          }
+                          onPress={() => focusPlace(item, index)}
+                        >
+                          <View
+                            style={[
+                              styles.markerPin,
+                              isSelected && styles.markerPinSelected,
+                            ]}
+                          >
+                            <Text style={styles.markerPinText}>📍</Text>
+                          </View>
+                        </Marker>
+                      );
+                    })}
+                  </MapView>
+                </View>
+              )}
+
+              <FlatList
+                ref={listRef}
+                data={places}
+                keyExtractor={(_, index) =>
+                  `place-${index}-${params.refreshKey}`
+                }
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item, index }) => {
+                  const isSaved = savedIds.has(index);
+                  const isSaving = savingIndex === index;
+                  const isSelected = selectedIndex === index;
+
+                  return (
+                    <Pressable
+                      onPress={() => focusPlace(item, index)}
+                      style={[
+                        styles.card,
+                        isSelected && styles.cardSelected,
+                      ]}
+                    >
+                      <View style={styles.cardHeader}>
+                        <Text style={styles.placeName}>{item.name}</Text>
+
+                        <View style={styles.badge}>
+                          <Text style={styles.badgeText}>
+                            {vibeEmoji[vibe] || '📍'} {vibe}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.placeAddress}>
+                        📍 {item.address || params.location}
+                      </Text>
+
+                      <Pressable
+                        style={[
+                          styles.saveButton,
+                          isSaved && styles.saveButtonSaved,
+                        ]}
+                        onPress={() => handleSave(item, index)}
+                        disabled={isSaving || isSaved}
+                      >
+                        {isSaving ? (
+                          <ActivityIndicator size="small" color="#111214" />
+                        ) : (
+                          <Text
+                            style={[
+                              styles.saveButtonText,
+                              isSaved && styles.saveButtonTextSaved,
+                            ]}
+                          >
+                            {isSaved ? '❤️ Zapisano' : '🤍 Zapisz miejsce'}
+                          </Text>
+                        )}
+                      </Pressable>
+                    </Pressable>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      Nic nie znaleziono dla "{params.location}".
+                    </Text>
+                    <Text style={styles.emptySub}>
+                      Spróbuj wpisać inną lokalizację lub klimat.
                     </Text>
                   </View>
-                </View>
-
-                <Text style={styles.placeAddress}>
-                  📍 {item.address || params.location}
-                </Text>
-
-                <Pressable
-                  style={[styles.saveButton, isSaved && styles.saveButtonSaved]}
-                  onPress={() => handleSave(item, index)}
-                  disabled={isSaving || isSaved}
-                >
-                  {isSaving ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>
-                      {isSaved ? '❤️ Zapisano' : '🤍 Zapisz miejsce'}
-                    </Text>
-                  )}
-                </Pressable>
-              </View>
-            );
-          }}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                Nic nie znaleziono dla "{params.location}".
-              </Text>
-              <Text style={styles.emptySub}>
-                Spróbuj wpisać inną lokalizację lub klimat.
-              </Text>
+                }
+              />
             </View>
-          }
-        />
-      )}
-    </SafeAreaView>
+          )}
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F8FA' },
+  gradient: {
+    flex: 1,
+  },
+  safe: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+  },
   header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    marginBottom: 14,
   },
-  backButton: { marginBottom: 10 },
-  backIcon: { fontSize: 16, color: '#2D6A8A', fontWeight: 'bold' },
+  backButton: {
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+  },
+  backIcon: {
+    fontSize: 14,
+    color: '#B9BCC8',
+  },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: '#1E2A38',
+    color: '#F5F3EE',
     textTransform: 'capitalize',
+    marginBottom: 4,
   },
-  headerSubtitle: { fontSize: 14, color: '#64748B' },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 20 },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#8C8F99',
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    flex: 1,
+  },
+  mapWrapper: {
+    height: 240,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#23242A',
+  },
+  map: {
+    flex: 1,
+  },
+  markerPin: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#101114',
+    borderWidth: 1,
+    borderColor: '#89F0FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerPinSelected: {
+    backgroundColor: '#89F0FF',
+  },
+  markerPinText: {
+    fontSize: 16,
+  },
+  listContent: {
+    paddingBottom: 30,
+  },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    backgroundColor: '#101114',
+    borderRadius: 24,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#23242A',
+  },
+  cardSelected: {
+    borderColor: '#89F0FF',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -199,52 +391,66 @@ const styles = StyleSheet.create({
   placeName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1E2A38',
+    color: '#F5F3EE',
     flex: 1,
-    marginRight: 10,
+    marginRight: 12,
   },
   badge: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: '#181C25',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#2E3443',
   },
   badgeText: {
-    color: '#0369A1',
+    color: '#89F0FF',
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
   },
-  placeAddress: { fontSize: 14, color: '#64748B', marginBottom: 14 },
+  placeAddress: {
+    fontSize: 14,
+    color: '#A3A5AE',
+    marginBottom: 14,
+    lineHeight: 21,
+  },
   saveButton: {
-    backgroundColor: '#2D6A8A',
-    borderRadius: 12,
-    paddingVertical: 10,
+    backgroundColor: '#c9c7c4',
+    borderRadius: 16,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   saveButtonSaved: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: '#1D2330',
+    borderWidth: 1,
+    borderColor: '#2E3443',
   },
   saveButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: '#111214',
+    fontWeight: '800',
     fontSize: 14,
+    letterSpacing: 0.2,
+  },
+  saveButtonTextSaved: {
+    color: '#89F0FF',
   },
   emptyContainer: {
     alignItems: 'center',
     marginTop: 100,
-    paddingHorizontal: 40,
+    paddingHorizontal: 30,
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1E2A38',
+    fontWeight: '700',
+    color: '#F5F3EE',
     textAlign: 'center',
   },
   emptySub: {
     fontSize: 14,
-    color: '#64748B',
+    color: '#8C8F99',
     textAlign: 'center',
     marginTop: 8,
+    lineHeight: 21,
   },
 });

@@ -9,15 +9,16 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../src/lib/supabase';
 
 export default function AISearchScreen() {
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Available cities for "Surprise me" feature
+
   const cities = [
     'Warsaw', 'Gdansk', 'Krakow', 'Wroclaw', 'Poznan',
     'Paris', 'London', 'Berlin', 'Amsterdam', 'Barcelona',
@@ -25,8 +26,7 @@ export default function AISearchScreen() {
     'Dubai', 'Singapore', 'Tokyo', 'Sydney', 'Bangkok',
     'Lisbon', 'Istanbul', 'Miami', 'Los Angeles',
   ];
-  
-  // All 8 vibes matching the edge function
+
   const vibes = [
     'party',
     'relax',
@@ -38,46 +38,40 @@ export default function AISearchScreen() {
     'lonely',
   ];
 
-  // Activities mapped to each vibe's amenity options
   const activities = [
-    // party → nightclub
     'find a great nightclub',
     'find a bar to party at',
-    // relax → cafe
     'find a cozy coffee shop',
     'find a great restaurant',
-    // culture → museum
     'explore museums',
     'visit an art gallery',
-    // nature → park
     'enjoy a park',
     'find a green space to relax in',
-    // mysterious → ruins
     'explore ancient ruins',
     'visit a mysterious castle',
-    // sunset → viewpoint
     'find the best viewpoint',
     'watch the sunset from somewhere special',
-    // sad → cemetery
     'visit a historic cemetery',
     'find a quiet melancholic place',
-    // lonely → library
     'find a quiet library',
     'find a place to be alone with my thoughts',
   ];
-  
+
   const handleSurpriseMe = () => {
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
-    const randomVibe = vibes[Math.floor(Math.random() * vibes.length)];
-    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
-    
+    const randomCity =
+      cities[Math.floor(Math.random() * cities.length)];
+    const randomVibe =
+      vibes[Math.floor(Math.random() * vibes.length)];
+    const randomActivity =
+      activities[Math.floor(Math.random() * activities.length)];
+
     const prompt = `I want to ${randomActivity} in ${randomCity} with a ${randomVibe} vibe`;
     setUserInput(prompt);
   };
 
   const handleAISearch = async () => {
     if (!userInput.trim()) {
-      Alert.alert("Błąd", "Wpisz coś, aby AI mogło szukać!");
+      Alert.alert('Błąd', 'Wpisz coś, aby AI mogło szukać!');
       return;
     }
 
@@ -85,41 +79,37 @@ export default function AISearchScreen() {
     setIsLoading(true);
 
     try {
-      console.log("🚀 Wysyłam request do Supabase...");
-
-      const { data, error } = await supabase.functions.invoke('analyze-vibe', {
-        body: { prompt: userInput.trim() }
-      });
-
-      console.log("📥 RESPONSE:", { data, error });
+      const { data, error } = await supabase.functions.invoke(
+        'analyze-vibe',
+        {
+          body: { prompt: userInput.trim() },
+        }
+      );
 
       if (error) {
-        console.error("Szczegóły błędu serwera:", error);
-        throw new Error(error.message || "Błąd serwera");
+        throw new Error(error.message || 'Błąd serwera');
       }
 
       if (data && data.places) {
-        console.log("✅ Sukces! Dane dotarły do aplikacji.");
-        
         router.push({
-          pathname: '/(main)/result', 
-          params: { 
-            vibe: data.vibe, 
+          pathname: '/(main)/result',
+          params: {
+            vibe: data.vibe,
             location: data.location,
-            places: JSON.stringify(data.places), 
-            refreshKey: Date.now().toString() 
-          }
+            places: JSON.stringify(data.places),
+            refreshKey: Date.now().toString(),
+          },
         });
       } else {
-        Alert.alert("Brak wyników", "AI nie znalazło miejsc dla tego zapytania.");
+        Alert.alert(
+          'Brak wyników',
+          'AI nie znalazło miejsc dla tego zapytania.'
+        );
       }
-
     } catch (error: any) {
-      console.error("Błąd AI Search:", error.message);
-      
       Alert.alert(
-        "Problemy techniczne", 
-        "Serwer potrzebuje więcej czasu na przeszukanie map. Spróbuj kliknąć przycisk jeszcze raz – wyniki są zazwyczaj cachowane i za drugim razem pójdzie szybciej."
+        'Problemy techniczne',
+        'Serwer potrzebuje więcej czasu na przeszukanie map. Spróbuj kliknąć przycisk jeszcze raz – wyniki są zazwyczaj cachowane i za drugim razem pójdzie szybciej.'
       );
     } finally {
       setIsLoading(false);
@@ -127,84 +117,204 @@ export default function AISearchScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-      <View style={styles.container}>
-        <View style={styles.earthBadge}><Text style={{ fontSize: 40 }}>🌍</Text></View>
-        <Text style={styles.title}>Vibe Explorer</Text>
-        <Text style={styles.subtitle}>Gdzie chcesz dzisiaj pojechać?</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Np. Gdzie w Warszawie zjem dobry obiad?"
-          placeholderTextColor="#94A3B8"
-          multiline
-          value={userInput}
-          onChangeText={setUserInput}
-          editable={!isLoading}
-        />
-        
-        {/* Surprise me button */}
-        <Pressable 
-          style={styles.surpriseButton}
-          onPress={handleSurpriseMe}
-          disabled={isLoading}
+    <LinearGradient
+      colors={['#050505', '#090909', '#101114', '#161821']}
+      locations={[0, 0.35, 0.72, 1]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.surpriseButtonText}>🎲 Surprise me!</Text>
-        </Pressable>
-        
-        {/* Main search button */}
-        <Pressable 
-          style={[styles.searchButton, isLoading && styles.disabledButton]} 
-          onPress={handleAISearch} 
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <View style={styles.loaderRow}>
-              <ActivityIndicator color="#FFFFFF" />
-              <Text style={[styles.searchButtonText, {marginLeft: 10}]}>Szukam...</Text>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoEmoji}>🌍</Text>
+              </View>
+              <Text style={styles.title}>Vibe Explorer</Text>
+              <Text style={styles.subtitle}>
+                Opisz swój vibe, a znajdziemy dla Ciebie miejsce
+              </Text>
             </View>
-          ) : (
-            <Text style={styles.searchButtonText}>🔎 Znajdź mój vibe</Text>
-          )}
-        </Pressable>
-      </View>
-    </ScrollView>
+
+            <View style={styles.card}>
+              <Text style={styles.label}>Twój prompt</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Np. Gdzie w Warszawie zjem dobry obiad w spokojnym, klimatycznym miejscu?"
+                placeholderTextColor="#6F6F73"
+                multiline
+                value={userInput}
+                onChangeText={setUserInput}
+                editable={!isLoading}
+                textAlignVertical="top"
+              />
+
+              <Pressable
+                style={[
+                  styles.surpriseButton,
+                  isLoading && styles.disabledButton,
+                ]}
+                onPress={handleSurpriseMe}
+                disabled={isLoading}
+              >
+                <Text style={styles.surpriseButtonText}>
+                   Wylosuj vibe i miasto
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[
+                  styles.searchButton,
+                  isLoading && styles.disabledButton,
+                ]}
+                onPress={handleAISearch}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <View style={styles.loaderRow}>
+                    <ActivityIndicator color="#0B0C0F" />
+                    <Text
+                      style={[
+                        styles.searchButtonText,
+                        { marginLeft: 10 },
+                      ]}
+                    >
+                      Szukam vibe’u...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.searchButtonText}>
+                     Znajdź mój vibe
+                  </Text>
+                )}
+              </Pressable>
+
+              <Text style={styles.helperText}>
+                Podaj miasto, typ miejsca lub vibe. Możesz pisać
+                pełnymi zdaniami, np. „Chcę spokojne miejsce z naturą
+                na obrzeżach Berlina”.
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: { flexGrow: 1, backgroundColor: '#F7F8FA' },
-  container: { flex: 1, paddingTop: 60, paddingHorizontal: 24 },
-  earthBadge: { alignItems: 'center', marginBottom: 20 },
-  title: { fontSize: 32, fontWeight: '900', color: '#1E2A38', textAlign: 'center' },
-  subtitle: { fontSize: 16, color: '#64748B', textAlign: 'center', marginBottom: 40 },
-  input: { 
-    backgroundColor: '#FFFFFF', 
-    borderWidth: 1, 
-    borderColor: '#E2E8F0', 
-    borderRadius: 24, 
-    padding: 24, 
-    minHeight: 140, 
-    marginBottom: 16, 
-    textAlignVertical: 'top',
-    fontSize: 16,
-    color: '#1E2A38'
+  gradient: {
+    flex: 1,
   },
-  surpriseButton: { 
-    backgroundColor: '#7C3AED', 
-    height: 48, 
-    borderRadius: 16, 
-    alignItems: 'center', 
+  safe: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 32,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 26,
+  },
+  logoBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12
+    marginBottom: 10,
+    backgroundColor: '#101114',
   },
-  surpriseButtonText: { 
-    color: '#FFFFFF', 
-    fontSize: 16, 
-    fontWeight: '700' 
+  logoEmoji: {
+    fontSize: 32,
   },
-  searchButton: { backgroundColor: '#2D6A8A', height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  disabledButton: { backgroundColor: '#94A3B8' },
-  searchButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
-  loaderRow: { flexDirection: 'row', alignItems: 'center' }
+  title: {
+    fontSize: 30,
+    color: '#F5F3EE',
+    fontFamily: 'ProfileHeading',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#A3A5AE',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  card: {
+    backgroundColor: '#101114',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#23242A',
+  },
+  label: {
+    fontSize: 13,
+    color: '#A3A5AE',
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  input: {
+    backgroundColor: '#14161B',
+    borderWidth: 1,
+    borderColor: '#262937',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    minHeight: 130,
+    fontSize: 15,
+    color: '#F5F3EE',
+    marginBottom: 16,
+  },
+  surpriseButton: {
+    backgroundColor: '#1F1F26',
+    borderRadius: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#34343E',
+  },
+  surpriseButtonText: {
+    color: '#F5F3EE',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  searchButton: {
+    backgroundColor: '#F5F3EE',
+    borderRadius: 18,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  searchButtonText: {
+    color: '#111214',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  loaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#777986',
+    marginTop: 4,
+    lineHeight: 18,
+  },
 });

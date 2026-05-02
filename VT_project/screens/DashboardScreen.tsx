@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -9,7 +10,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../src/lib/supabase';
 
 const VIBES = [
@@ -35,6 +35,27 @@ export default function DashboardScreen() {
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const saveSearchSession = async (location: string, vibe: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('search_sessions')
+        .insert({
+          user_id: user.id,
+          location,
+          vibe,
+        })
+        .select();
+
+      console.log('💾 Session saved:', data);
+      console.log('💾 Session error:', error);
+    } catch (e: any) {
+      console.error('Błąd zapisu sesji:', e.message);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!selectedVibe) {
       Alert.alert('Wybierz vibe', 'Najpierw wybierz klimat podróży.');
@@ -57,6 +78,10 @@ export default function DashboardScreen() {
       if (error) throw new Error(error.message || 'Błąd serwera');
 
       if (data && data.places && data.places.length > 0) {
+
+        // Zapisujemy wyszukiwanie do search_sessions
+        await saveSearchSession(data.location, data.vibe);
+
         router.push({
           pathname: '/(main)/result',
           params: {

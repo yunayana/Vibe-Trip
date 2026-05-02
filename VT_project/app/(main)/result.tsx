@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -9,9 +10,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../src/lib/supabase';
 
 export default function ResultScreen() {
@@ -46,42 +46,44 @@ export default function ResultScreen() {
 
   const handleSave = async (item: any, index: number) => {
     if (savedIds.has(index)) {
-      Alert.alert('Już zapisano', 'To miejsce jest już w Twoich zapisanych.');
+      Alert.alert("Już zapisano", "To miejsce jest już w Twoich ulubionych.");
       return;
     }
 
     setSavingIndex(index);
-
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        Alert.alert(
-          'Błąd',
-          'Musisz być zalogowany, aby zapisywać miejsca.'
-        );
+        Alert.alert("Błąd", "Musisz być zalogowany, aby zapisywać miejsca.");
         return;
       }
 
-      const { error } = await supabase.from('place_recommendations').insert({
-        user_id: user.id,
-        name: item.name,
-        address: item.address || params.location,
-        latitude: item.lat ?? null,
-        longitude: item.lon ?? null,
-        place_id: `${item.lat}_${item.lon}`,
-        vibe_match_score: 100,
-      });
+      // STRZELAMY DO NOWEJ TABELI saved_places
+      const { error } = await supabase
+        .from('saved_places') 
+        .insert({
+          user_id: user.id,
+          place_name: item.name,
+          address: item.address || params.location,
+          vibe_category: params.vibe as string || 'general',
+          lat: item.lat ?? null,
+          lng: item.lon ?? null,
+        });
 
-      if (error) throw error;
+      if (error) {
+        // Jeśli rzuci błąd unikalności (miejsce już jest w bazie)
+        if (error.code === '23505') {
+           Alert.alert("Info", "To miejsce było już wcześniej zapisane!");
+        } else {
+           throw error;
+        }
+      }
 
-      setSavedIds((prev) => new Set(prev).add(index));
-      Alert.alert('Zapisano!', `"${item.name}" dodano do zapisanych miejsc.`);
+      setSavedIds(prev => new Set(prev).add(index));
+      // Opcjonalnie: mały feedback dźwiękowy lub haptic jeśli testujesz na telefonie
     } catch (e: any) {
-      console.error('Błąd zapisu:', e.message);
-      Alert.alert('Błąd', 'Nie udało się zapisać miejsca. Spróbuj ponownie.');
+      console.error("Błąd zapisu:", e.message);
+      Alert.alert("Błąd", "Nie udało się zapisać. Sprawdź połączenie.");
     } finally {
       setSavingIndex(null);
     }

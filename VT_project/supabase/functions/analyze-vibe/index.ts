@@ -6,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-// POPRAWIONA składnia Overpass - przetestowana
 const amenityMap: Record<string, string> = {
   'museum':    '["tourism"~"museum|gallery"]',
   'nightclub': '["amenity"~"nightclub|bar|pub"]',
@@ -14,11 +13,10 @@ const amenityMap: Record<string, string> = {
   'park':      '["leisure"="park"]',
   'viewpoint': '["tourism"="viewpoint"]',
   'ruins':     '["historic"~"ruins|castle|monument|archaeological_site"]',
-  'cemetery':  '["amenity"="grave_yard"]["historic"~"yes|cemetery"]',  // tylko historyczne
+  'cemetery':  '["amenity"="grave_yard"]["historic"~"yes|cemetery"]',
   'library':   '["amenity"="library"]',
 };
 
-// Fallback gdy cemetery daje 0 wyników - zwykłe cmentarze
 const amenityFallbackMap: Record<string, string> = {
   'cemetery': '["amenity"="grave_yard"]',
 };
@@ -127,6 +125,7 @@ serve(async (req) => {
             role: 'system',
             content: `You are a travel assistant. Extract vibe, location, and amenity from user prompts.
 Return ONLY valid JSON, nothing else.
+Return exactly 5 places in a compact JSON format. Keep descriptions under 150 characters.
 
 STRICT RULES:
 1. "vibe" MUST be exactly one of: party, relax, culture, nature, mysterious, sunset, sad, lonely
@@ -173,7 +172,6 @@ Output: {"vibe":"nature","location":"Amsterdam","amenity":"park"}`
     const result = JSON.parse(aiData.choices[0].message.content);
     console.log("AI parsed:", result);
 
-    // Wymuś poprawne mapowanie vibe → amenity (nie ufaj AI dla amenity)
     const vibeToAmenity: Record<string, string> = {
       'party':      'nightclub',
       'relax':      'cafe',
@@ -185,7 +183,6 @@ Output: {"vibe":"nature","location":"Amsterdam","amenity":"park"}`
       'lonely':     'library',
     };
 
-    // Napraw częste błędy AI w nazwach miast
     const cityAliases: Record<string, string> = {
       'Newyork': 'New York', 'New york': 'New York', 'newyork': 'New York',
       'Warszawa': 'Warsaw', 'warszawa': 'Warsaw',
@@ -205,7 +202,6 @@ Output: {"vibe":"nature","location":"Amsterdam","amenity":"park"}`
     const rawLocation = result.location || 'Warsaw';
     const location = cityAliases[rawLocation] ?? rawLocation;
 
-    // WYMUSZAMY amenity z vibeToAmenity — ignorujemy co AI zwróciło dla amenity
     const amenity = vibeToAmenity[vibe];
 
     console.log(`✅ Zwalidowano: vibe=${vibe}, location=${location}, amenity=${amenity}`);
@@ -221,7 +217,7 @@ Output: {"vibe":"nature","location":"Amsterdam","amenity":"park"}`
     // 3. SZUKAJ MIEJSC
     let places = await queryOverpass(overpassQuery, 12000);
 
-    // 4. FALLBACK - spróbuj alternatywny tag jeśli główny dał 0 wyników
+    // 4. FALLBACK
     if (places.length === 0 && amenityFallbackMap[amenity]) {
       console.log(`Główny tag dał 0 wyników, próbuje fallback dla ${amenity}`);
       const fallbackFilter = amenityFallbackMap[amenity];
@@ -231,9 +227,12 @@ Output: {"vibe":"nature","location":"Amsterdam","amenity":"park"}`
       places = await queryOverpass(fallbackQuery, 12000);
     }
 
-    console.log(`Finalne wyniki: ${places.length} miejsc dla ${amenity} w ${location}`);
+    // 5. OGRANICZ DO 5 WYNIKÓW
+    const limitedPlaces = places.slice(0, 5);
 
-    return new Response(JSON.stringify({ vibe, location, places }), {
+    console.log(`Finalne wyniki: ${limitedPlaces.length} miejsc dla ${amenity} w ${location}`);
+
+    return new Response(JSON.stringify({ vibe, location, places: limitedPlaces }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });

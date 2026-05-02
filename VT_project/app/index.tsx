@@ -3,18 +3,41 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import WelcomeScreen from "../screens/WelcomeScreen";
 import { supabase } from "../src/lib/supabase";
+import { useProfileStore } from "../store/profileStore"; // Importujemy Twój store
 
 export default function Index() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isStarted, setIsStarted] = useState(false);
+  const updateProfile = useProfileStore((state) => state.updateProfile);
 
   useEffect(() => {
-    // Sprawdzamy, czy użytkownik jest już zalogowany
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Sprawdzamy sesję i od razu ładujemy dane personalizacji
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
+
+      if (session?.user) {
+        // ETAP 7: Pobieramy dane profilu do globalnego stanu, 
+        // aby AI miało do nich dostęp od razu w dashboardzie
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          updateProfile({
+            nickname: profile.nickname,
+            travelStyle: profile.travel_style,
+            budget: profile.budget,
+            homeLocation: profile.home_location
+          });
+        }
+      }
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -25,14 +48,11 @@ export default function Index() {
     };
   }, []);
 
-  // Funkcja odpalana po kliknięciu przycisku na WelcomeScreen
   const handleStart = () => {
-    setIsStarted(true);
     if (session) {
-      // Jeśli mamy sesję, idziemy do dashboarda
+      // Jeśli zalogowany, leci do dashboardu z załadowanym już profilem
       router.replace("/(main)/dashboard");
     } else {
-      // Jeśli NIE mamy sesji, idziemy do logowania
       router.replace("/login");
     }
   };
@@ -45,7 +65,6 @@ export default function Index() {
     );
   }
 
-  // Ziemia 🌍 czeka na kliknięcie
   return <WelcomeScreen onStart={handleStart} />;
 }
 

@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -11,11 +12,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../src/lib/supabase';
+import { useProfileStore } from '../store/profileStore';
 
 export default function AISearchScreen() {
+  const { profile } = useProfileStore();
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,14 +30,8 @@ export default function AISearchScreen() {
   ];
 
   const vibes = [
-    'party',
-    'relax',
-    'culture',
-    'nature',
-    'mysterious',
-    'sunset',
-    'sad',
-    'lonely',
+    'party', 'relax', 'culture', 'nature',
+    'mysterious', 'sunset', 'sad', 'lonely',
   ];
 
   const activities = [
@@ -58,15 +54,26 @@ export default function AISearchScreen() {
   ];
 
   const handleSurpriseMe = () => {
-    const randomCity =
-      cities[Math.floor(Math.random() * cities.length)];
-    const randomVibe =
-      vibes[Math.floor(Math.random() * vibes.length)];
-    const randomActivity =
-      activities[Math.floor(Math.random() * activities.length)];
-
+    const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    const randomVibe = vibes[Math.floor(Math.random() * vibes.length)];
+    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
     const prompt = `I want to ${randomActivity} in ${randomCity} with a ${randomVibe} vibe`;
     setUserInput(prompt);
+  };
+
+  const saveSearchSession = async (location: string, vibe: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('search_sessions')
+        .insert([{ user_id: user.id, location, vibe }]);
+
+      if (error) console.error('Błąd zapisu historii:', error);
+    } catch (error) {
+      console.error('Błąd zapisu sesji:', error);
+    }
   };
 
   const handleAISearch = async () => {
@@ -78,11 +85,21 @@ export default function AISearchScreen() {
     Keyboard.dismiss();
     setIsLoading(true);
 
+    // Budowanie inteligentnego promptu z danymi profilu
+    const smartPrompt = `
+      User Prompt: ${userInput.trim()}
+      ---
+      Dodatkowe preferencje użytkownika:
+      - Styl podróży: ${profile.travelStyle || 'standardowy'}
+      - Budżet: ${profile.budget || 'średni'}
+      - Nickname: ${profile.nickname || 'Podróżnik'}
+    `;
+
     try {
       const { data, error } = await supabase.functions.invoke(
         'analyze-vibe',
         {
-          body: { prompt: userInput.trim() },
+          body: { prompt: smartPrompt },
         }
       );
 
@@ -91,6 +108,8 @@ export default function AISearchScreen() {
       }
 
       if (data && data.places) {
+        await saveSearchSession(data.location, data.vibe);
+
         router.push({
           pathname: '/(main)/result',
           params: {
@@ -107,10 +126,11 @@ export default function AISearchScreen() {
         );
       }
     } catch (error: any) {
-      Alert.alert(
-        'Problemy techniczne',
-        'Serwer potrzebuje więcej czasu na przeszukanie map. Spróbuj kliknąć przycisk jeszcze raz – wyniki są zazwyczaj cachowane i za drugim razem pójdzie szybciej.'
-      );
+      if (error.message?.includes('network')) {
+        Alert.alert('Brak połączenia', 'Sprawdź swoje Wi-Fi lub dane komórkowe.');
+      } else {
+        Alert.alert('Problem z AI', 'Sztuczna inteligencja ma przerwę na kawę. Spróbuj za chwilę!');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -152,41 +172,30 @@ export default function AISearchScreen() {
               />
 
               <Pressable
-                style={[
-                  styles.surpriseButton,
-                  isLoading && styles.disabledButton,
-                ]}
+                style={[styles.surpriseButton, isLoading && styles.disabledButton]}
                 onPress={handleSurpriseMe}
                 disabled={isLoading}
               >
                 <Text style={styles.surpriseButtonText}>
-                   Wylosuj vibe i miasto
+                  Wylosuj vibe i miasto
                 </Text>
               </Pressable>
 
               <Pressable
-                style={[
-                  styles.searchButton,
-                  isLoading && styles.disabledButton,
-                ]}
+                style={[styles.searchButton, isLoading && styles.disabledButton]}
                 onPress={handleAISearch}
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <View style={styles.loaderRow}>
                     <ActivityIndicator color="#0B0C0F" />
-                    <Text
-                      style={[
-                        styles.searchButtonText,
-                        { marginLeft: 10 },
-                      ]}
-                    >
-                      Szukam vibe’u...
+                    <Text style={[styles.searchButtonText, { marginLeft: 10 }]}>
+                      Szukam vibe'u...
                     </Text>
                   </View>
                 ) : (
                   <Text style={styles.searchButtonText}>
-                     Znajdź mój vibe
+                    Znajdź mój vibe
                   </Text>
                 )}
               </Pressable>
@@ -194,7 +203,7 @@ export default function AISearchScreen() {
               <Text style={styles.helperText}>
                 Podaj miasto, typ miejsca lub vibe. Możesz pisać
                 pełnymi zdaniami, np. „Chcę spokojne miejsce z naturą
-                na obrzeżach Berlina”.
+                na obrzeżach Berlina".
               </Text>
             </View>
           </View>

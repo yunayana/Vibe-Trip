@@ -20,6 +20,33 @@ export default function ResultScreen() {
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
   const [savingIndex, setSavingIndex] = useState<number | null>(null);
 
+  const saveSearchSession = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("🔵 saveSearchSession user:", user?.id);
+      console.log("🔵 location:", params.location, "vibe:", params.vibe);
+      if (!user) {
+        console.log("❌ Brak usera!");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('search_sessions')
+        .insert({
+          user_id: user.id,
+          location: params.location as string,
+          vibe: params.vibe as string || 'general',
+        })
+        .select();
+
+      console.log("✅ INSERT data:", data);
+      console.log("❌ INSERT error:", error);
+
+    } catch (e: any) {
+      console.error("Błąd zapisu sesji:", e.message);
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     setPlaces([]);
@@ -30,6 +57,10 @@ export default function ResultScreen() {
         const decoded = JSON.parse(params.places as string);
         setPlaces(decoded);
         console.log("✅ Wyświetlam miejsca dla:", params.location);
+
+        // Zapisujemy wyszukiwanie do search_sessions
+        saveSearchSession();
+
       } catch (e) {
         console.error("❌ Błąd parsowania:", e);
       }
@@ -40,7 +71,7 @@ export default function ResultScreen() {
 
   const handleSave = async (item: any, index: number) => {
     if (savedIds.has(index)) {
-      Alert.alert("Już zapisano", "To miejsce jest już w Twoich zapisanych.");
+      Alert.alert("Już zapisano", "To miejsce jest już w Twoich ulubionych.");
       return;
     }
 
@@ -53,24 +84,28 @@ export default function ResultScreen() {
       }
 
       const { error } = await supabase
-        .from('place_recommendations')
+        .from('saved_places')
         .insert({
           user_id: user.id,
-          name: item.name,
+          place_name: item.name,
           address: item.address || params.location,
-          latitude: item.lat ?? null,
-          longitude: item.lon ?? null,
-          place_id: `${item.lat}_${item.lon}`,  // unikalny klucz z koordynatów
-          vibe_match_score: 100,                 // domyślnie 100 bo user świadomie zapisał
+          vibe_category: params.vibe as string || 'general',
+          lat: item.lat ?? null,
+          lng: item.lon ?? null,
         });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          Alert.alert("Info", "To miejsce było już wcześniej zapisane!");
+        } else {
+          throw error;
+        }
+      }
 
       setSavedIds(prev => new Set(prev).add(index));
-      Alert.alert("✅ Zapisano!", `"${item.name}" dodano do zapisanych miejsc.`);
     } catch (e: any) {
       console.error("Błąd zapisu:", e.message);
-      Alert.alert("Błąd", "Nie udało się zapisać miejsca. Spróbuj ponownie.");
+      Alert.alert("Błąd", "Nie udało się zapisać. Sprawdź połączenie.");
     } finally {
       setSavingIndex(null);
     }

@@ -1,8 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,10 +12,16 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../src/lib/supabase';
 import { getProfile, upsertProfile } from '../src/services/profileService';
 import { useProfileStore } from '../store/profileStore';
+
+interface SearchSession {
+  id: string;
+  location: string;
+  vibe: string;
+  created_at: string;
+}
 
 export default function ProfileScreen() {
   const { profile, updateProfile, resetProfile } = useProfileStore();
@@ -36,8 +44,38 @@ export default function ProfileScreen() {
     !profile.nickname && !profile.homeLocation
   );
 
+  const [history, setHistory] = useState<SearchSession[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [topVibe, setTopVibe] = useState<string>("Brak danych");
+
+  const fetchMyVibe = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log("USER ID:", user?.id);
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('user_vibe_stats')
+      .select('vibe')
+      .eq('user_id', user.id)
+      .order('count', { ascending: false })
+      .limit(1)
+      .single();
+
+    console.log("VIBE DATA:", data);
+    console.log("VIBE ERROR:", error);
+
+    if (data) {
+      setTopVibe(data.vibe);
+    }
+  };
+
   useEffect(() => {
     fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    fetchMyVibe();
   }, []);
 
   async function fetchUserData() {
@@ -77,11 +115,33 @@ export default function ProfileScreen() {
           setIsEditing(false);
         }
       }
+
+      await fetchHistory(user.id);
     } catch (error: any) {
       console.error('Błąd pobierania danych profilu:', error.message);
       Alert.alert('Błąd', 'Nie udało się pobrać profilu.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchHistory(userId: string) {
+    try {
+      setHistoryLoading(true);
+
+      const historyRes = await supabase
+        .from('search_sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (historyRes.error) console.error('Błąd historii:', historyRes.error.message);
+      else setHistory(historyRes.data || []);
+
+    } catch (error) {
+      console.error('Błąd pobierania historii:', error);
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -193,7 +253,6 @@ export default function ProfileScreen() {
     }
   };
 
-  // loading też w gradientzie, żeby nie było białego tła
   if (loading) {
     return (
       <LinearGradient
@@ -351,6 +410,13 @@ export default function ProfileScreen() {
             </View>
           )}
 
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsTitle}>Twój podróżniczy vibe 🌍</Text>
+            <View style={styles.vibeBadge}>
+              <Text style={styles.vibeText}>✨ {topVibe.toUpperCase()}</Text>
+            </View>
+          </View>
+
           <Pressable
               style={[styles.logoutButton, loggingOut && styles.disabledButton]}
               onPress={confirmLogout}
@@ -360,6 +426,33 @@ export default function ProfileScreen() {
                 {loggingOut ? 'Wylogowywanie...' : 'Wyloguj się'}
               </Text>
             </Pressable>
+
+          {/* Sekcja Historia */}
+          <Text style={styles.sectionHeader}>🕐 Historia wyszukiwań</Text>
+          {historyLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#F5F3EE" />
+            </View>
+          ) : history.length > 0 ? (
+            <FlatList
+              data={history}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              renderItem={({ item }) => (
+                <View style={styles.historyCard}>
+                  <View style={styles.historyContent}>
+                    <Text style={styles.historyLocation}>{item.location}</Text>
+                    <Text style={styles.historyVibe}>{item.vibe}</Text>
+                  </View>
+                  <Text style={styles.historyDate}>
+                    {new Date(item.created_at).toLocaleDateString('pl-PL')}
+                  </Text>
+                </View>
+              )}
+            />
+          ) : (
+            <Text style={styles.emptyText}>Brak historii wyszukiwań</Text>
+          )}
 
         </View>
       </ScrollView>
@@ -423,6 +516,7 @@ const styles = StyleSheet.create({
   fontWeight: '900',
   color: '#F5F3EE',
   marginBottom: 18,
+  marginTop: 28,
   letterSpacing: 0.3,
   fontFamily: 'ProfileHeading',
   },
@@ -508,6 +602,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#343434',
+    marginBottom: 24,
   },
   logoutText: {
     color: '#F5F3EE',
@@ -516,5 +611,72 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  historyCard: {
+    backgroundColor: '#101010',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#232323',
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  historyContent: {
+    flex: 1,
+  },
+  historyLocation: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#F5F3EE',
+    marginBottom: 4,
+  },
+  historyVibe: {
+    fontSize: 13,
+    color: '#9A9A9F',
+    fontWeight: '500',
+  },
+  historyDate: {
+    fontSize: 12,
+    color: '#6F6F73',
+    fontWeight: '500',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#6F6F73',
+    textAlign: 'center',
+    paddingVertical: 24,
+    fontStyle: 'italic',
+  },
+  statsContainer: {
+    backgroundColor: '#161616',
+    padding: 20,
+    borderRadius: 20,
+    marginVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  statsTitle: {
+    color: '#9A9A9F',
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  vibeBadge: {
+    backgroundColor: '#2D6A8A',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  vibeText: {
+    color: '#FFF',
+    fontWeight: '900',
+    fontSize: 18,
   },
 });

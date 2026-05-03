@@ -70,17 +70,6 @@ export default function PlaceDetailsScreen() {
               tego miejsca maksymalny vibe.
             </Text>
           </View>
-
-          <Pressable
-            style={styles.mapButton}
-            onPress={() =>
-              alert('Tu w przyszłości dodasz mapę Google!')
-            }
-          >
-            <Text style={styles.mapButtonText}>
-              🗺️ Zobacz na mapie
-            </Text>
-          </Pressable>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -163,17 +152,5 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  mapButton: {
-    marginTop: 22,
-    backgroundColor: '#F5F3EE',
-    borderRadius: 18,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  mapButtonText: {
-    color: '#111214',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
+  
 });

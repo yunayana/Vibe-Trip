@@ -410,13 +410,6 @@ export default function ProfileScreen() {
             </View>
           )}
 
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsTitle}>Twój podróżniczy vibe 🌍</Text>
-            <View style={styles.vibeBadge}>
-              <Text style={styles.vibeText}>✨ {topVibe.toUpperCase()}</Text>
-            </View>
-          </View>
-
           <Pressable
               style={[styles.logoutButton, loggingOut && styles.disabledButton]}
               onPress={confirmLogout}
@@ -427,32 +420,6 @@ export default function ProfileScreen() {
               </Text>
             </Pressable>
 
-          {/* Sekcja Historia */}
-          <Text style={styles.sectionHeader}>🕐 Historia wyszukiwań</Text>
-          {historyLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color="#F5F3EE" />
-            </View>
-          ) : history.length > 0 ? (
-            <FlatList
-              data={history}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              renderItem={({ item }) => (
-                <View style={styles.historyCard}>
-                  <View style={styles.historyContent}>
-                    <Text style={styles.historyLocation}>{item.location}</Text>
-                    <Text style={styles.historyVibe}>{item.vibe}</Text>
-                  </View>
-                  <Text style={styles.historyDate}>
-                    {new Date(item.created_at).toLocaleDateString('pl-PL')}
-                  </Text>
-                </View>
-              )}
-            />
-          ) : (
-            <Text style={styles.emptyText}>Brak historii wyszukiwań</Text>
-          )}
 
         </View>
       </ScrollView>

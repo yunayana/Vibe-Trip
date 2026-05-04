@@ -41,7 +41,7 @@ Zarządzanie zapisanymi miejscami, podgląd historii oraz widok potwierdzenia za
 
 <p align="center">
   <img src="docs/screenshots/zapisanemiejsca.jpg" alt="Szczegóły miejsca / zapis" width="220" />
-  <img src="docs/screenshots/zapisanimiejsca_historia.jpg" alt="Zapisane miejsca + historia" width="220" />
+  <img src="docs/screenshots/zapisanemiejsca_historia.jpg" alt="Zapisane miejsca + historia" width="220" />
   <img src="docs/screenshots/Zapisano.jpg" alt="Potwierdzenie zapisu miejsca" width="220" />
 </p>
 

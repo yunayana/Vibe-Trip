@@ -10,18 +10,30 @@ import {
   Text,
   View,
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../src/lib/supabase';
 
 const VIBES = [
-  { key: 'party', label: '🎉 Party', description: 'nightclub, bar, pub' },
-  { key: 'relax', label: '☕ Relax', description: 'cafe, restaurant' },
-  { key: 'culture', label: '🏛️ Culture', description: 'museum, gallery' },
-  { key: 'nature', label: '🌲 Nature', description: 'park, green space' },
-  { key: 'mysterious', label: '🧭 Mysterious', description: 'ruins, castle' },
-  { key: 'sunset', label: '🌅 Sunset', description: 'viewpoint' },
-  { key: 'sad', label: '🕯️ Sad', description: 'historic cemetery' },
-  { key: 'lonely', label: '📚 Lonely', description: 'library' },
+  { key: 'party', label: 'Party', description: 'nightclub, bar, pub' },
+  { key: 'relax', label: 'Relax', description: 'cafe, restaurant' },
+  { key: 'culture', label: 'Culture', description: 'museum, gallery' },
+  { key: 'nature', label: 'Nature', description: 'park, green space' },
+  { key: 'mysterious', label: 'Mysterious', description: 'ruins, castle' },
+  { key: 'sunset', label: 'Sunset', description: 'viewpoint' },
+  { key: 'sad', label: 'Sad', description: 'historic cemetery' },
+  { key: 'lonely', label: 'Lonely', description: 'library' },
 ];
+
+const VIBE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  party: 'wine',
+  relax: 'cafe',
+  culture: 'library',
+  nature: 'leaf',
+  mysterious: 'compass',
+  sunset: 'sunny',
+  sad: 'water',
+  lonely: 'book',
+};
 
 const CITIES = [
   'Warsaw', 'Gdansk', 'Krakow', 'Wroclaw', 'Poznan',
@@ -379,6 +391,12 @@ export default function DashboardScreen() {
                   onPress={() => setSelectedVibe(vibe.key)}
                   disabled={isLoading}
                 >
+                  <Ionicons
+                    name={VIBE_ICONS[vibe.key]}
+                    size={20}
+                    color="#F5F3EE"
+                    style={{ marginBottom: 4 }}
+                  />
                   <Text style={styles.vibeLabel}>{vibe.label}</Text>
                   <Text style={styles.vibeDesc}>{vibe.description}</Text>
                 </Pressable>

@@ -10,6 +10,7 @@ import {
   Text,
   View
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../src/lib/supabase';
 
 export default function ResultScreen() {
@@ -111,9 +112,15 @@ export default function ResultScreen() {
     }
   };
 
-  const vibeEmoji: Record<string, string> = {
-    party: '🎉', relax: '☕', culture: '🏛️', nature: '🌲',
-    mysterious: '🧭', sunset: '🌅', sad: '🕯️', lonely: '📚',
+  const VIBE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+    party: 'wine',
+    relax: 'cafe',
+    culture: 'library',
+    nature: 'leaf',
+    mysterious: 'compass',
+    sunset: 'sunny',
+    sad: 'water',
+    lonely: 'book',
   };
 
   const vibe = params.vibe as string || 'vibe';
@@ -124,15 +131,23 @@ export default function ResultScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Text style={styles.backIcon}>← Wróć</Text>
         </Pressable>
-        <View>
-          <Text style={styles.headerTitle}>
-            {vibeEmoji[vibe] || '📍'} {params.location || 'Twoje miejsca'}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {isLoading
-              ? "Ładowanie..."
-              : `${places.length} propozycji · vibe: ${vibe}`}
-          </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <Ionicons
+            name={VIBE_ICONS[vibe] || 'location'}
+            size={24}
+            color="#2D6A8A"
+            style={{ marginRight: 8 }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>
+              {params.location || 'Twoje miejsca'}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {isLoading
+                ? "Ładowanie..."
+                : `${places.length} propozycji · vibe: ${vibe}`}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -153,9 +168,15 @@ export default function ResultScreen() {
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.placeName}>{item.name}</Text>
-                  <View style={styles.badge}>
+                <View style={styles.badge}>
+                    <Ionicons
+                      name={VIBE_ICONS[vibe]}
+                      size={14}
+                      color="#F5F3EE"
+                      style={{ marginRight: 4 }}
+                    />
                     <Text style={styles.badgeText}>
-                      {vibeEmoji[vibe]} {vibe}
+                      {vibe}
                     </Text>
                   </View>
                 </View>

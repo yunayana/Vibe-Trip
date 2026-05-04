@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../src/lib/supabase';
 
 interface SavedPlace {
@@ -169,16 +170,16 @@ export default function SavedPlacesScreen() {
     }
   };
 
-  const vibeEmoji: Record<string, string> = {
-    party: '🎉',
-    relax: '🌿',
-    culture: '🏛️',
-    nature: '🌲',
-    mysterious: '🌙',
-    sunset: '🌅',
-    sad: '🌧️',
-    lonely: '🕯️',
-    general: '📍',
+  const VIBE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+    party: 'wine',
+    relax: 'leaf',
+    culture: 'library',
+    nature: 'leaf',
+    mysterious: 'moon',
+    sunset: 'sunny',
+    sad: 'water',
+    lonely: 'water',
+    general: 'location',
   };
 
   const statusLabel: Record<string, string> = {
@@ -317,9 +318,17 @@ export default function SavedPlacesScreen() {
                       ) : null}
 
                       {item.vibe_category ? (
-                        <Text style={styles.vibe}>
-                          {vibeEmoji[item.vibe_category] || '📍'} {item.vibe_category}
-                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                          <Ionicons
+                            name={VIBE_ICONS[item.vibe_category] || 'location'}
+                            size={14}
+                            color="#B8B8B8"
+                            style={{ marginRight: 4 }}
+                          />
+                          <Text style={styles.vibe}>
+                            {item.vibe_category}
+                          </Text>
+                        </View>
                       ) : null}
                     </View>
 

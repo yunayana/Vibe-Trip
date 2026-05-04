@@ -8,6 +8,51 @@ Aplikacja została zaprojektowana jako nowoczesny mobilny przewodnik po miejscac
 
 VibeTrip rozwijany jest jako projekt edukacyjno-projektowy, skupiony na budowie kompletnej aplikacji mobilnej z autoryzacją, backendem, routingiem, stanem globalnym oraz integracją z usługami zewnętrznymi. Architektura aplikacji została oparta o podejście modułowe, z rozdzieleniem warstwy UI, ekranów, store’ów oraz serwisów biznesowych. 
 
+## Screenshots
+
+### Główny ekran (Dashboard)
+
+Główny ekran aplikacji z personalizacją, statystykami oraz szybkimi akcjami.
+
+![Dashboard](docs/screenshots/główne.jpg)
+
+### Flow główny
+
+Podstawowy przepływ użytkownika: start aplikacji, logowanie / rejestracja oraz wejście do głównego widoku.
+
+<p align="center">
+  <img src="docs/screenshots/start.jpg" alt="Ekran startowy" width="220" />
+  <img src="docs/screenshots/zaloguj.jpg" alt="Ekran logowania" width="220" />
+  <img src="docs/screenshots/zarejestruj.jpg" alt="Ekran rejestracji" width="220" />
+</p>
+
+### AI Search i wyniki
+
+Ekrany odpowiedzialne za wyszukiwanie miejsc według vibe oraz prezentację rekomendacji.
+
+<p align="center">
+  <img src="docs/screenshots/ai-search.jpg" alt="AI Search" width="220" />
+  <img src="docs/screenshots/czat.jpg" alt="Wyniki / rekomendacje" width="220" />
+</p>
+
+### Zapisane miejsca i szczegóły
+
+Zarządzanie zapisanymi miejscami, podgląd historii oraz widok potwierdzenia zapisu.
+
+<p align="center">
+  <img src="docs/screenshots/zapisaniemiejsca.jpg" alt="Szczegóły miejsca / zapis" width="220" />
+  <img src="docs/screenshots/zapisaniemiejsca_historia.jpg" alt="Zapisane miejsca + historia" width="220" />
+  <img src="docs/screenshots/Zapisano.jpg" alt="Potwierdzenie zapisu miejsca" width="220" />
+</p>
+
+### Profil użytkownika
+
+Widok profilu i ustawień podróżniczych użytkownika.
+
+<p align="center">
+  <img src="docs/screenshots/profil.jpg" alt="Profil użytkownika" width="220" />
+</p>
+
 ## Aktualny zakres funkcji
 
 Aktualnie projekt obejmuje:
@@ -104,31 +149,9 @@ Przykładowe obszary danych w projekcie:
 - konto Supabase
 - plik środowiskowy z kluczami projektu
 
-### Instalacja
-```bash
-npm install
-```
-
-### Start projektu
-```bash
-npm start
-```
-
-### Uruchomienie platform
-```bash
-npm run android
-npm run ios
-npm run web
-```
-
-### Lint
-```bash
-npm run lint
-```
-
 ## Status projektu
 
-Projekt znajduje się na etapie aktywnego rozwoju. Zaimplementowane zostały podstawowe ekrany aplikacji, routing, autoryzacja, zapis miejsc, profil użytkownika, dashboard, AI Search oraz warstwa backendowa oparta o Supabase. Aktualny rozwój obejmuje dopracowanie statystyk, personalizacji oraz dalszą integrację map i rekomendacji. [web:1][web:62]
+Projekt znajduje się na etapie aktywnego rozwoju. Zaimplementowane zostały podstawowe ekrany aplikacji, routing, autoryzacja, zapis miejsc, profil użytkownika, dashboard, AI Search oraz warstwa backendowa oparta o Supabase. Aktualny rozwój obejmuje dopracowanie statystyk, personalizacji oraz dalszą integrację map i rekomendacji. 
 
 ## Kierunki rozwoju
 
@@ -137,7 +160,6 @@ Planowane lub możliwe dalsze rozszerzenia projektu:
 - bardziej zaawansowane statystyki użytkownika,
 - personalizowane rekomendacje oparte na historii i profilu,
 - pełniejsza integracja map i markerów,
-- statusy miejsc typu `want_to_visit` / `visited` / `favorite`,
 - filtrowanie i sortowanie zapisanych miejsc,
 - planowanie podróży,
 - rekomendacje zależne od budżetu i stylu podróży,

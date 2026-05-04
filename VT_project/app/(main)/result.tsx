@@ -168,7 +168,7 @@ export default function ResultScreen() {
             >
               <Text style={styles.backIcon}>← Wróć</Text>
             </Pressable>
-              </View>
+
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
               <Ionicons
                 name={VIBE_ICONS[vibe] || 'location'}
@@ -188,6 +188,7 @@ export default function ResultScreen() {
                 </Text>
               </View>
             </View>
+          </View>
 
           {isLoading ? (
             <View style={styles.loaderContainer}>

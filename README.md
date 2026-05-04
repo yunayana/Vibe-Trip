@@ -172,4 +172,5 @@ VibeTrip rozwijany jest jako projekt edukacyjny i praktyczny, którego celem jes
 ## Autorzy
 
 Yana Trotsenko 
+
 Valeriia Khylchenko 

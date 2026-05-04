@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { supabase } from '../../src/lib/supabase';
 
 export default function ResultScreen() {
@@ -89,15 +90,15 @@ export default function ResultScreen() {
     }
   };
 
-  const vibeEmoji: Record<string, string> = {
-    party: '🎉',
-    relax: '🌿',
-    culture: '🏛️',
-    nature: '🌲',
-    mysterious: '🌙',
-    sunset: '🌅',
-    sad: '🌧️',
-    lonely: '🕯️',
+  const VIBE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+    party: 'wine',
+    relax: 'leaf',
+    culture: 'library',
+    nature: 'leaf',
+    mysterious: 'moon',
+    sunset: 'sunny',
+    sad: 'water',
+    lonely: 'water',
   };
 
   const vibe = (params.vibe as string) || 'vibe';
@@ -167,17 +168,26 @@ export default function ResultScreen() {
             >
               <Text style={styles.backIcon}>← Wróć</Text>
             </Pressable>
+              </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Ionicons
+                name={VIBE_ICONS[vibe] || 'location'}
+                size={24}
+                color="#F5F3EE"
+                style={{ marginRight: 8 }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headerTitle}>
+                  {params.location || 'Twoje miejsca'}
+                </Text>
 
-            <Text style={styles.headerTitle}>
-              {vibeEmoji[vibe] || '📍'} {params.location || 'Twoje miejsca'}
-            </Text>
-
-            <Text style={styles.headerSubtitle}>
-              {isLoading
-                ? 'Ładowanie...'
-                : `${places.length} propozycji · vibe: ${vibe}`}
-            </Text>
-          </View>
+                <Text style={styles.headerSubtitle}>
+                  {isLoading
+                    ? 'Ładowanie...'
+                    : `${places.length} propozycji · vibe: ${vibe}`}
+                </Text>
+              </View>
+            </View>
 
           {isLoading ? (
             <View style={styles.loaderContainer}>
@@ -248,8 +258,14 @@ export default function ResultScreen() {
                         <Text style={styles.placeName}>{item.name}</Text>
 
                         <View style={styles.badge}>
+                          <Ionicons
+                            name={VIBE_ICONS[vibe] || 'location'}
+                            size={14}
+                            color="#F5F3EE"
+                            style={{ marginRight: 4 }}
+                          />
                           <Text style={styles.badgeText}>
-                            {vibeEmoji[vibe] || '📍'} {vibe}
+                            {vibe}
                           </Text>
                         </View>
                       </View>
